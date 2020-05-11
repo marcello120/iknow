@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+  <!-- Insert these scripts at the bottom of the HTML, but before you use any Firebase services -->
+
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-database.js"></script>
+
+
+
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-firestore.js"></script>
+
+  <!-- AngularFire -->
+  <script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="HandheldFriendly" content="true">
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyBMXeMh7yuvngbbLYl5ujib6T-T_SXOcTs",
+      authDomain: "quiz-2414b.firebaseapp.com",
+      databaseURL: "https://quiz-2414b.firebaseio.com",
+      projectId: "quiz-2414b",
+      storageBucket: "quiz-2414b.appspot.com",
+      messagingSenderId: "733075302263",
+      appId: "1:733075302263:web:78aacaeaf7080ff91be372",
+      measurementId: "G-PK932EWZH5"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+
+    var app = angular.module('todoApp', ["firebase"]);
+
+    app.controller('todoController', function TodoCtrl($scope, $location, $firebaseArray, $firebaseObject, $firebaseObject) {
+
+
+      $scope.name = new URLSearchParams(window.location.search).get('name');
+        
+      $scope.color = new URLSearchParams(window.location.search).get('color');
+
+      var basicBoard = {
+        "negbet": {
+          "11": "LightGray",
+          "12": "LightGray",
+          "21": "LightGray"
+        },
+        "posbet": {
+          "11": "LightGray",
+          "12": "LightGray",
+          "21": "LightGray"
+        },
+        "specs": {
+          "11": "LightGray",
+          "12": "LightGray",
+          "21": "LightGray"
+        }
+      }
+
+      var boardRef = firebase.database().ref().child('board');
+      var specRef = firebase.database().ref().child('spec');
+      var betRef = firebase.database().ref().child('bets');
+      var answerRef = firebase.database().ref().child('answers');
+      var scoreRef = firebase.database().ref().child('score');
+      var reverseSpecRef = firebase.database().ref().child('reversespec');
+      var posBetRef = firebase.database().ref().child('bets').child('posbet');
+      var negBetRef = firebase.database().ref().child('bets').child('negbet');
+      var storyTellerRef = firebase.database().ref().child('storyteller');
+
+
+      
+
+      var storytellerWatch = $firebaseObject(storyTellerRef).$watch(function() {
+            var tellerobj = $firebaseObject(storyTellerRef);
+            tellerobj.$loaded().then(function(){
+                console.log(tellerobj.name)
+                if(tellerobj.name!= $scope.name){
+                    console.log('you are storyteller')
+                    window.location.href = 'index.html?name='+ $scope.name+'&color='+ $scope.color+'#!/'
+                }
+            })
+        });
+
+
+      $scope.replies = {};
+
+      $scope.getreplies = function () {
+        console.log("hi")
+        return firebase.database().ref().once('value').then(function (snapshot) {
+          $scope.replies = snapshot.val()
+          $scope.$apply()
+        });
+      }
+
+      $firebaseObject(answerRef).$bindTo($scope, "answers").then(function () {
+        console.log($scope.answers);
+      });
+
+      $scope.clear = function () {
+        console.log('clearing')
+        boardRef.set(basicBoard)
+        specRef.set(null)
+        betRef.set(null)
+        reverseSpecRef.set(null)
+        answerRef.set(null)
+        firebase.database().ref().child('order').set(null)
+        firebase.database().ref().child('ready').set(null)
+        firebase.database().ref().child('activeplayer').set(null)
+        firebase.database().ref().child('storyteller').set(null)
+        firebase.database().ref().child('toggle').set(false)
+        scoreRef.set(null)
+      }
+
+      $scope.reset = function () {
+        //reset sets active player back to storyteller.next
+        //reset sets phase back to spec
+        boardRef.set(basicBoard)
+        specRef.set(null)
+        betRef.set(null)
+        reverseSpecRef.set(null)
+        answerRef.set(null)
+      }
+
+
+      $scope.markOK = function (key, value) {
+
+        document.getElementById(key+"+"+value+"ok").disabled = true;
+        document.getElementById(key+"+"+value+"x").disabled = true;
+
+
+        console.log(key + value)
+
+        scoreRef.once('value').then(function (scoreShot) {
+          console.log(scoreShot.val()[key])
+          var originalscore = scoreShot.val()[key]
+          return reverseSpecRef.child(key).once('value').then(function (snapshot) {
+            var winscore = 4 - snapshot.val().charAt(0)
+            var newscore = winscore + originalscore
+            console.log(key + " " + newscore)
+            return scoreRef.child(key).set(newscore).then((v) => { return newscore })
+          }).then((value) => {
+            return posBetRef.child(key).once('value').then(function (snapshot) {
+              var better = snapshot.val()
+              console.log(better)
+              if (better == undefined || better == null) {
+                return Promise.resolve(1)
+              }
+              if (better == key) { betterscore = value }
+              else { betterscore = scoreShot.val()[better] }
+              console.log(betterscore)
+              return scoreRef.child(better).set(betterscore + 1).then((v) => { return value })
+            })
+          }).then(value2 => {
+            return negBetRef.child(key).once('value').then(function (snapshot) {
+              var better = snapshot.val()
+              console.log(better)
+              if (better == undefined || better == null) {
+                return Promise.resolve(1)
+              }
+              if (better == key) {
+                betterscore = value2
+              } else { betterscore = scoreShot.val()[better] }
+              return scoreRef.child(better).set(betterscore - 1)
+            })
+          })
+        }).then((value) => {
+          answerRef.child(key).set(null)
+        })
+      }
+
+      $scope.markWrong = function (key, value) {
+
+        document.getElementById(key+"+"+value+"ok").disabled = true;
+        document.getElementById(key+"+"+value+"x").disabled = true;
+
+        console.log(key + value)
+
+        scoreRef.once('value').then(function (scoreShot) {
+          console.log(scoreShot.val()[key])
+          var originalscore = scoreShot.val()[key]
+
+          posBetRef.child(key).once('value').then(function (snapshot) {
+              var better = snapshot.val()
+              console.log(better)
+              if (better == undefined || better == null) {
+                return Promise.resolve(1)
+              }
+              betterscore = scoreShot.val()[better] 
+              console.log(betterscore)
+              return scoreRef.child(better).set(betterscore + 1).then((v) => { return value })
+            })
+            .then(value2 => {
+            return negBetRef.child(key).once('value').then(function (snapshot) {
+              var better = snapshot.val()
+              console.log(better)
+              if (better == undefined || better == null) {
+                return Promise.resolve(1)
+              }
+              betterscore = scoreShot.val()[better] 
+              return scoreRef.child(better).set(betterscore - 1)
+            })
+          })
+        }).then((value) => {
+          answerRef.child(key).set(null)
+        })
+
+      }
+
+
+    });
+
+  </script>
+</head>
+
+<body>
+  <div ng-app="todoApp" ng-controller="todoController">
+    <div>
+
+      <p>I am the admin
+      <p>
+
+        <button class="btn btn-success m-2" ng-click="getreplies()">FETCH!</button>
+
+      <div class="m-4" ng-repeat="(name, answer) in replies">
+        <strong>{{name}} </strong> : {{answer}}
+      </div>
+
+      <button class="btn btn-danger m-2" ng-click="clear()">Clear!</button>
+
+      <button class="btn btn-warning m-2" ng-click="reset()">RESET!</button>
+
+      <div>Answers:</div>
+
+      <div ng-repeat="(key, value) in answers" class="m-4"> <strong>{{key}} </strong> : {{value}}
+        <button  id = '{{key}}+{{value}}ok' class="btn btn-success m-2" ng-click="markOK(key, value)">OK</button> 
+        <button  id = '{{key}}+{{value}}x' class="btn btn-danger m-2" ng-click="markWrong(key, value)">X</button>
+      </div>
+
+
+
+    </div>
+  </div>
+</body>
+
+</html>
