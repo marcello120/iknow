@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+ <!-- Insert these scripts at the bottom of the HTML, but before you use any Firebase services -->
+
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-database.js"></script>
+
+
+
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-firestore.js"></script>
+  
+	<!-- AngularFire -->
+	<script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="HandheldFriendly" content="true">
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyBMXeMh7yuvngbbLYl5ujib6T-T_SXOcTs",
+    authDomain: "quiz-2414b.firebaseapp.com",
+    databaseURL: "https://quiz-2414b.firebaseio.com",
+    projectId: "quiz-2414b",
+    storageBucket: "quiz-2414b.appspot.com",
+    messagingSenderId: "733075302263",
+    appId: "1:733075302263:web:78aacaeaf7080ff91be372",
+    measurementId: "G-PK932EWZH5"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+
+var app =angular.module('todoApp', ["firebase"]);
+
+
+    app.controller('todoController', ['$scope', '$location', '$firebaseArray','$firebaseObject', function($scope, $location, $firebaseArray, $firebaseObject  ) {
+
+        var neutralColor = 'LightGray'
+
+        var numbers = ["11","12","21","22","31","32"]
+
+        $scope.name = new URLSearchParams(window.location.search).get('name');
+        
+        $scope.color = new URLSearchParams(window.location.search).get('color');
+
+        $scope.hidebool =true;
+
+        $scope.phase = {};
+
+        $scope.score = 0;
+
+        $scope.IsDisabled = false;
+
+        $scope.disableNums = true;
+
+        $scope.disableVote = true;
+
+        var readyref = firebase.database().ref().child('ready');
+
+        var toggleref = firebase.database().ref().child('toggle');
+
+        var activeSetRef = firebase.database().ref().child('activeplayer');
+
+        var activePlayerRef = firebase.database().ref().child('activeplayer').child('player');
+        var activePhaseRef = firebase.database().ref().child('activeplayer').child('phase');
+
+        var storyTellerRef = firebase.database().ref().child('storyteller');
+
+        var answerRef = firebase.database().ref().child('answers');
+
+        var specRef = firebase.database().ref().child('spec');
+
+        var reverseSpecRef = firebase.database().ref().child('reversespec');
+
+        var boardRef = firebase.database().ref().child('board');
+
+        var betsRef = firebase.database().ref().child('bets');
+
+        var orderRef = firebase.database().ref().child('order');
+
+        $scope.readypressed = 'btn btn-warning m-2';
+
+        $firebaseObject(toggleref).$bindTo($scope, "hidebool").then(function() {
+        console.log($scope.hidebool);
+        });
+
+        $firebaseObject(activePhaseRef).$bindTo($scope, "phase").then(function() {
+        console.log($scope.phase);
+        });
+
+        $firebaseObject(firebase.database().ref().child('score').child($scope.name)).$bindTo($scope, "score").then(function() {
+        console.log($scope.score);
+        });
+        
+    
+
+
+
+        // XXXXXX.child(XXXXXXX).once('value', function(snapshot) {
+        //        console.log(snapshot.val())
+        //     });
+
+        //reroute player to admin platform
+        //endgame, remove player button on admin platform
+        //cannot bet on nothing
+
+        var initOrder = function () {
+            orderRef.child($scope.name).once('value', function(snapshot) {
+                if(snapshot.exists()){
+                    console.log("Player Detected")
+                }else{
+                    toggleref.once('value', function(toggleshot) {
+                        if (toggleshot.val()==true){
+                            alert("game already in progress")
+                            window.location.href = 'https://www.google.com/search?q=I+dont+know+how+to+properly+authenticate+users&oq=I+dont+know+how+to+properly+authenticate+users'
+                            return
+                            //dont let new player enter game
+                        }else{
+                            registerPlayer()
+                        }
+                    })
+                }
+            });
+        }
+
+            //called on page load
+        function registerPlayer(){
+            orderArray = $firebaseArray(orderRef)
+                    orderArray.$loaded().then(function(){
+                        if(orderArray.length>6){
+                            alert('Too many people in lobby')
+                            window.location.href = 'https://www.google.com/search?q=I+dont+know+how+to+properly+authenticate+users&oq=I+dont+know+how+to+properly+authenticate+users'
+                        }
+                        if (orderArray.length==0){
+                            orderRef.child($scope.name).set("nothere");
+                            alert("You are the only player in the room")
+                        }else{
+                            var first = orderArray[0].$id
+                            var last = orderArray[orderArray.length-1].$id
+                            orderRef.child($scope.name).set(first);
+                            orderRef.child(last).set($scope.name)
+                        }
+                        console.log("New Player Registered")
+                    })
+        }
+
+
+        initOrder();
+
+    
+        $scope.ready = function(){
+            if(!$scope.readybool){
+                readyref.child($scope.name).set('on')
+                $scope.readybool = true;
+                $scope.readypressed = "btn btn-success m-2"
+            }else{
+                readyref.child($scope.name).set(null)
+                $scope.readybool = false;
+                $scope.readypressed = 'btn btn-warning m-2';
+            }
+        }
+
+        $scope.quit = function(){
+           orderRef.child($scope.name).set(null).then((v)=>{
+            window.location.href = 'https://www.google.com/search?q=I+dont+know+how+to+properly+authenticate+users&oq=I+dont+know+how+to+properly+authenticate+users'
+           })
+
+        }
+
+
+
+        var activePlayerWatch = $firebaseObject(activePlayerRef).$watch(function() {
+            var playerobj = $firebaseObject(activePlayerRef);
+            deactivateAllButtons();
+            playerobj.$loaded().then(function(){
+                if(playerobj.$value== $scope.name){
+                    console.log('You are active player ' + playerobj.$value);
+                    var phaseobj = $firebaseObject(activePhaseRef);
+                    phaseobj.$loaded().then(function(){
+                        if(phaseobj.$value=='spec'){
+                            activateSpecButtons()
+                        }
+                        if(phaseobj.$value=='bet'){
+                            activateBetButtons()
+                        }
+                    })
+                }
+            })
+        });
+
+
+        var storytellerWatch = $firebaseObject(storyTellerRef).$watch(function() {
+            var tellerobj = $firebaseObject(storyTellerRef);
+            tellerobj.$loaded().then(function(){
+                console.log(tellerobj.name)
+                if(tellerobj.name== $scope.name){
+                    console.log('you are storyteller')
+                    window.location.href = 'admin.html?name='+ $scope.name+'&color='+ $scope.color+'#!/'
+
+                }
+            })
+        });
+
+
+        var boardWatch = $firebaseObject(boardRef).$watch(function() {
+            var boardobj = $firebaseObject(boardRef);
+            boardobj.$loaded().then(function(){
+                angular.forEach(boardobj.negbet, function(value, key) {
+                    document.getElementById(key+'-').style.background=value;
+                 });
+                 angular.forEach(boardobj.specs, function(value, key) {
+                    document.getElementById(key).style.background=value;
+                 });
+                 angular.forEach(boardobj.posbet, function(value, key) {
+                    document.getElementById(key+'+').style.background=value;
+                 });
+            })
+
+        });
+
+
+
+        function deactivateAllButtons() {
+            angular.forEach(numbers, function (value, key) { 
+                document.getElementById(value).disabled = true
+                document.getElementById(value+'+').disabled = true
+                document.getElementById(value+'-').disabled = true
+            });
+            console.log('Buttons Deactivated')
+        }
+
+        function activateSpecButtons() {
+            boardRef.child('specs').once('value', function(snapshot){
+               console.log(snapshot.val())
+               angular.forEach(snapshot.val(), function(value, key) {
+                    if(value==neutralColor){
+                        document.getElementById(key).disabled = false                   
+                    }
+                 });
+            })
+        }
+
+        function activateBetButtons() {
+            boardRef.child('posbet').once('value', function(posBets){
+               console.log(posBets.val())
+               angular.forEach(posBets.val(), function(value, key) {
+                    if(value==neutralColor){
+                        document.getElementById(key+'+').disabled = false                   
+                    }
+                 });
+            })
+            boardRef.child('negbet').once('value', function(negBets){
+               console.log(negBets.val())
+               angular.forEach(negBets.val(), function(value, key) {
+                    if(value==neutralColor){
+                        document.getElementById(key+'-').disabled = false                   
+                    }
+                 });
+            })
+            boardRef.child('specs').once('value', function(snapshot){
+               console.log(snapshot.val())
+               angular.forEach(snapshot.val(), function(value, key) {
+                    if(value==neutralColor){
+                        document.getElementById(key+'-').disabled = true
+                        document.getElementById(key+'+').disabled = true                                      
+                    }
+                 });
+            })
+        }
+
+
+
+
+
+        $scope.clickSpec = function(event)
+        {
+            setSpec(event.target.id)
+            deactivateAllButtons()
+            callnextplayer()
+        };
+        $scope.clickBet = function(event)
+        {
+            setBet(event.target.id)
+            deactivateAllButtons()
+            callnextplayer()
+        };
+
+
+        function setSpec(aid) {
+            console.log('Setting Spec')
+            boardRef.child('specs').child(aid).set($scope.color)
+            specRef.child(aid).set($scope.name)
+            reverseSpecRef.child($scope.name).set(aid)
+        }
+
+        function setBet(aid) {
+            var betType = {}
+            if(aid.includes('+')){
+                betType = 'posbet'
+                console.log('Positive Bet')
+            }
+            if(aid.includes('-')){
+                betType = 'negbet'
+                console.log('Negative Bet')
+            }
+            var position = aid.substring(0, aid.length - 1);
+
+            boardRef.child(betType).child(position).set($scope.color)
+
+            specRef.once('value', function(bettedonObject){
+                var person = bettedonObject.child(position).val()
+                if(person==null){
+                    return
+                }
+                betsRef.child(betType).child(person).set($scope.name);
+            })
+        }
+
+        function callnextplayer() {
+            orderRef.once('value', function(order){
+                const nextone = order.val()[$scope.name]
+                storyTellerRef.once('value', function(teller){
+                    var nextcandidate = {}
+                    console.log(teller.val().name)
+                    console.log(nextone)
+                    if(teller.val().name == nextone){
+                        activePhaseRef.once('value', function(phase){
+                            if(phase.val() == 'spec'){
+                                activePhaseRef.set('bet');
+                                nextcandidate = teller.val().next                                
+                            }else{
+                                activePhaseRef.set('answer');
+                                nextcandidate = teller.val().name                                
+                            }
+
+                        })
+                    }else{
+                        nextcandidate = nextone
+                    }
+                    activePlayerRef.set(nextcandidate)
+                })
+            })
+        }
+        
+        $scope.tasks = "Write";
+        $scope.addname = function() {
+            $scope.tasks.push($scope.title);
+        }
+
+		$scope.submitanswer = function(aanswer){
+            if(aanswer!=undefined){
+                $scope.tasks = "Your answer is: " +aanswer
+                answerRef.child($scope.name).set(aanswer)
+                //deactivate answer button
+            }
+ 		}
+
+    }]);
+
+    
+</script>
+</head>
+<body>
+<div ng-app="todoApp" ng-controller="todoController" ng-cloak>
+    
+    <button ng-class="readypressed" ng-hide='hidebool.$value' ng-click="ready()">Ready!</button>
+    <button class="btn btn-danger m-2" ng-hide='hidebool.$value' ng-click="quit()">QUIT!</button>
+
+
+    <div ng-hide="!hidebool.$value">
+    
+	<div class="m-2"> 
+    <div>
+        <p>Name: {{name}} Color: {{color}} Score: {{score.$value}} Room: XXXXX Player Count:</p>
+    </div>
+	</div>
+	<div class="m-2"> 
+    <form ng-submit="addanswer()">
+        <p>Answer:</p>
+    <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Answer" ng-model="answer">
+    </form>
+	</div>
+
+    <button class="btn btn-success m-2" ng-click="submitanswer(answer)" ng-disabled="phase.$value != 'answer' ">ANSWER!</button>
+	
+	<div class="alert alert-info m-2" role="alert">
+        {{tasks}}
+    </div>
+
+    <!--just set listeners to gamestate and update colors/button enabling based on that-->
+    
+
+    <div class="row">
+        <div class="col-4">
+            <button id='11-' class="btn btn-block m-2"  data-ng-click="clickBet($event)">-</button>
+        </div>
+        <div class="col-4">
+            <button id='11' class="btn btn-block m-2"  data-ng-click="clickSpec($event)">1</button>
+        </div>
+        <div class="col-4">
+            <button id='11+' class="btn btn-block m-2"  data-ng-click="clickBet($event)">+</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4">
+            <button id='12-' class="btn btn-block m-2"  data-ng-click="clickBet($event)">-</button>
+        </div>
+        <div class="col-4">
+            <button id='12' class="btn btn-block m-2"  data-ng-click="clickSpec($event)">1</button>
+        </div>
+        <div class="col-4">
+            <button id='12+' class="btn btn-block m-2"  data-ng-click="clickBet($event)">+</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4">
+            <button id='21-' class="btn btn-block m-2"  data-ng-click="clickBet($event)">-</button>
+        </div>
+        <div class="col-4">
+            <button id='21' class="btn btn-block m-2"  data-ng-click="clickSpec($event)">2</button>
+        </div>
+        <div class="col-4">
+            <button id='21+' class="btn btn-block m-2" data-ng-click="clickBet($event)">+</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4">
+            <button id='22-' class="btn btn-block m-2"  data-ng-click="clickBet($event)">-</button>
+        </div>
+        <div class="col-4">
+            <button id='22' class="btn btn-block m-2"  data-ng-click="clickSpec($event)">2</button>
+        </div>
+        <div class="col-4">
+            <button id='22+' class="btn btn-block m-2" data-ng-click="clickBet($event)">+</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4">
+            <button id='31-' class="btn btn-block m-2"  data-ng-click="clickBet($event)">-</button>
+        </div>
+        <div class="col-4">
+            <button id='31' class="btn btn-block m-2"  data-ng-click="clickSpec($event)">3</button>
+        </div>
+        <div class="col-4">
+            <button id='31+' class="btn btn-block m-2" data-ng-click="clickBet($event)">+</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4">
+            <button id='32-' class="btn btn-block m-2"  data-ng-click="clickBet($event)">-</button>
+        </div>
+        <div class="col-4">
+            <button id='32' class="btn btn-block m-2"  data-ng-click="clickSpec($event)">3</button>
+        </div>
+        <div class="col-4">
+            <button id='32+' class="btn btn-block m-2" data-ng-click="clickBet($event)">+</button>
+        </div>
+    </div>
+
+
+
+    </div>
+
+</body>
+</html>
