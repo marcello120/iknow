@@ -47,63 +47,46 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
-
-
         var app = angular.module('todoApp', ["firebase"]);
 
         app.controller('todoController', function TodoCtrl($scope, $location, $firebaseArray, $firebaseObject) {
 
-            
-            var basecolors = {
-                red: 1,
-                green: 1,
-                blue: 1,
-                orange: 1,
-                purple: 1,
-                gold: 1
+
+            $scope.room = new URLSearchParams(window.location.search).get('room');
+
+            var rootref = firebase.database().ref().child($scope.room);
+
+            var colorRef = rootref.child('colors');
+
+            $scope.colordrop = "Select a Color";
+
+            $scope.color = ""
+
+            $scope.colorlist={}
+
+            $firebaseObject(colorRef).$bindTo($scope, "colorlist").then(function () {
+                console.log($scope.colorlist);
+            });
+
+            $scope.go = function (aname, acolor, aroom) {
+                console.log(aroom)
+
+                if (aname != undefined && aname != "" && aname != " " && acolor != undefined && acolor != "") {
+                    colorRef.child(acolor).set(null).then(()=>{
+                        window.location.href = 'game.html?name=' + aname + '&color=' + acolor + "&room="+ aroom;
+                    })
+
+                } else {
+                    alert("Enter a valid name and color!");
+                }
             }
 
-            $scope.create = function (aroom) {
-                if(aroom == "" || aroom == " " || aroom == undefined ){
-                    alert("Invalid room number");
-                    return
-                }
-
-                firebase.database().ref().child('rooms').child(aroom).once("value", snapshot => {
-                    if (snapshot.exists()) {
-                        console.log("exists!");
-                        alert("This room exists already, try joining it!");
-                    }else{
-                        firebase.database().ref().child('rooms').child(aroom).set(firebase.database.ServerValue.TIMESTAMP)
-                        .then(()=>{
-                            return firebase.database().ref().child(aroom).child('toggle').set(false)
-                        })
-                        .then(()=>{
-                            return  firebase.database().ref().child(aroom).child('colors').set(basecolors)
-                        })
-                        .then(()=>{
-                            return window.location.href = 'register.html?room=' + aroom;
-                            //transfer to register
-                        })
-                    }
-                });
-            }
-
-            $scope.join = function (aroom) {
-                if(aroom == "" || aroom == " " || aroom == undefined ){
-                    alert("Invalid room number");
-                    return
-                }
-
-                firebase.database().ref().child(aroom).once("value", snapshot => {
-                    if (snapshot.exists()) {
-                        window.location.href = 'register.html?room=' + aroom;
-                        //go to register
-                    }else{
-                        console.log("exists!");
-                        alert("This room  does not exists, but you can create it!");
-                    }
-                });
+ 
+            $scope.setColor = function (acolor) {
+                $scope.color = acolor
+                $scope.colordrop = acolor
+                console.log($scope.color)
+                console.log($scope.colordrop)
             }
 
 
@@ -115,13 +98,37 @@
 <body>
     <div ng-app="todoApp" ng-controller="todoController">
 
-        <input type="text" class="form-control m-3" id="roominput" placeholder="RoomID" ng-model="room">
+        <div class="m-2">
+            <form ng-submit="addname()">
+                <p>Name:</p>
+                <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Name"
+                    ng-model="name">
+            </form>
+        </div>
+        <br>
+        <div class="m-2">
+            <div class="dropdown">
+                <button  class="btn btn-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton"
+                    data-toggle="dropdown" ng-model="colordrop" ng-style="{'background':colordrop}" >
+                    {{colordrop}}
+                </button>
+                <div class="dropdown-menu w-100">
+                    <button ng-repeat="(key, value) in colorlist" class="dropdown-item" ng-style="{'color':key}" ng-click="setColor(key)">{{key}}</button>
+                </div>
+            </div>
+        </div>
 
-        <button class="btn btn-success m-2 w-25" ng-click="create(room)"> Create!</button>
+        <br>
 
-        <button class="btn btn-success m-2 w-25"  ng-click="join(room)">Join!</button>
+        
+        <button class="btn btn-success m-2 w-100"  ng-click="go(name,color,room)">START!</button>
+
+
+        <!--just set listeners to gamestate and update colors/button enabling based on that-->
 
     </div>
+
+
 </body>
 
 </html>

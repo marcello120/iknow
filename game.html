@@ -53,6 +53,10 @@ var app =angular.module('todoApp', ["firebase"]);
         
         $scope.color = new URLSearchParams(window.location.search).get('color');
 
+        $scope.room = new URLSearchParams(window.location.search).get('room');
+
+        var rootref = firebase.database().ref().child($scope.room);
+
         $scope.hidebool =true;
 
         $scope.phase = {};
@@ -65,28 +69,28 @@ var app =angular.module('todoApp', ["firebase"]);
 
         $scope.disableVote = true;
 
-        var readyref = firebase.database().ref().child('ready');
+        var readyref = rootref.child('ready');
 
-        var toggleref = firebase.database().ref().child('toggle');
+        var toggleref = rootref.child('toggle');
 
-        var activeSetRef = firebase.database().ref().child('activeplayer');
+        var activeSetRef = rootref.child('activeplayer');
 
-        var activePlayerRef = firebase.database().ref().child('activeplayer').child('player');
-        var activePhaseRef = firebase.database().ref().child('activeplayer').child('phase');
+        var activePlayerRef = rootref.child('activeplayer').child('player');
+        var activePhaseRef = rootref.child('activeplayer').child('phase');
 
-        var storyTellerRef = firebase.database().ref().child('storyteller');
+        var storyTellerRef = rootref.child('storyteller');
 
-        var answerRef = firebase.database().ref().child('answers');
+        var answerRef = rootref.child('answers');
 
-        var specRef = firebase.database().ref().child('spec');
+        var specRef = rootref.child('spec');
 
-        var reverseSpecRef = firebase.database().ref().child('reversespec');
+        var reverseSpecRef = rootref.child('reversespec');
 
-        var boardRef = firebase.database().ref().child('board');
+        var boardRef = rootref.child('board');
 
-        var betsRef = firebase.database().ref().child('bets');
+        var betsRef = rootref.child('bets');
 
-        var orderRef = firebase.database().ref().child('order');
+        var orderRef = rootref.child('order');
 
         $scope.readypressed = 'btn btn-warning m-2';
 
@@ -98,7 +102,7 @@ var app =angular.module('todoApp', ["firebase"]);
         console.log($scope.phase);
         });
 
-        $firebaseObject(firebase.database().ref().child('score').child($scope.name)).$bindTo($scope, "score").then(function() {
+        $firebaseObject(rootref.child('score').child($scope.name)).$bindTo($scope, "score").then(function() {
         console.log($scope.score);
         });
         
@@ -205,7 +209,7 @@ var app =angular.module('todoApp', ["firebase"]);
                 console.log(tellerobj.name)
                 if(tellerobj.name== $scope.name){
                     console.log('you are storyteller')
-                    window.location.href = 'admin.html?name='+ $scope.name+'&color='+ $scope.color+'#!/'
+                    window.location.href = 'admin.html?name='+ $scope.name+'&color='+ $scope.color+ '&room='+ $scope.room
 
                 }
             })
@@ -358,10 +362,9 @@ var app =angular.module('todoApp', ["firebase"]);
         }
 
 		$scope.submitanswer = function(aanswer){
-            if(aanswer!=undefined){
+            if(aanswer!=undefined && aanswer!="" && aanswer!=" "){
                 $scope.tasks = "Your answer is: " +aanswer
                 answerRef.child($scope.name).set(aanswer)
-                //deactivate answer button
             }
  		}
 
@@ -381,7 +384,7 @@ var app =angular.module('todoApp', ["firebase"]);
     
 	<div class="m-2"> 
     <div>
-        <p>Name: {{name}} Color: {{color}} Score: {{score.$value}} Room: XXXXX Player Count:</p>
+        <p>Name: {{name}} Color: {{color}} Score: {{score.$value}} Room: {{room}} Player Count:</p>
     </div>
 	</div>
 	<div class="m-2"> 
@@ -391,7 +394,7 @@ var app =angular.module('todoApp', ["firebase"]);
     </form>
 	</div>
 
-    <button class="btn btn-success m-2" ng-click="submitanswer(answer)" ng-disabled="phase.$value != 'answer' ">ANSWER!</button>
+    <button class="btn btn-success m-2" ng-click="submitanswer(answer)" ng-style="{'color':color}" ng-disabled="phase.$value != 'answer' ">ANSWER!</button>
 	
 	<div class="alert alert-info m-2" role="alert">
         {{tasks}}
@@ -474,7 +477,7 @@ var app =angular.module('todoApp', ["firebase"]);
 
 
 
-    </div>
+</div>
 
 </body>
 </html>

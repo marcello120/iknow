@@ -57,6 +57,11 @@
         
       $scope.color = new URLSearchParams(window.location.search).get('color');
 
+      $scope.room = new URLSearchParams(window.location.search).get('room');
+
+      var rootref = firebase.database().ref().child($scope.room)
+
+
       var basicBoard = {
         "negbet": {
           "11": "LightGray",
@@ -84,15 +89,17 @@
         }
       }
 
-      var boardRef = firebase.database().ref().child('board');
-      var specRef = firebase.database().ref().child('spec');
-      var betRef = firebase.database().ref().child('bets');
-      var answerRef = firebase.database().ref().child('answers');
-      var scoreRef = firebase.database().ref().child('score');
-      var reverseSpecRef = firebase.database().ref().child('reversespec');
-      var posBetRef = firebase.database().ref().child('bets').child('posbet');
-      var negBetRef = firebase.database().ref().child('bets').child('negbet');
-      var storyTellerRef = firebase.database().ref().child('storyteller');
+      var boardRef = rootref.child('board');
+      var specRef = rootref.child('spec');
+      var betRef = rootref.child('bets');
+      var answerRef = rootref.child('answers');
+      var scoreRef = rootref.child('score');
+      var reverseSpecRef = rootref.child('reversespec');
+      var posBetRef = rootref.child('bets').child('posbet');
+      var negBetRef = rootref.child('bets').child('negbet');
+      var storyTellerRef = rootref.child('storyteller');
+      var activePhaseRef = rootref.child('activeplayer').child('phase');
+
 
 
       
@@ -103,7 +110,7 @@
                 console.log(tellerobj.name)
                 if(tellerobj.name!= $scope.name){
                     console.log('you are storyteller')
-                    window.location.href = 'game.html?name='+ $scope.name+'&color='+ $scope.color+'#!/'
+                    window.location.href = 'game.html?name='+ $scope.name+'&color='+ $scope.color+ '&room=' + $scope.room
                 }
             })
         });
@@ -113,7 +120,7 @@
 
       $scope.getreplies = function () {
         console.log("hi")
-        return firebase.database().ref().once('value').then(function (snapshot) {
+        return rootref.once('value').then(function (snapshot) {
           $scope.replies = snapshot.val()
           $scope.$apply()
         });
@@ -123,6 +130,10 @@
         console.log($scope.answers);
       });
 
+      $firebaseObject(activePhaseRef).$bindTo($scope, "phase").then(function () {
+        console.log($scope.phase);
+      });
+
       $scope.clear = function () {
         console.log('clearing')
         boardRef.set(basicBoard)
@@ -130,11 +141,11 @@
         betRef.set(null)
         reverseSpecRef.set(null)
         answerRef.set(null)
-        firebase.database().ref().child('order').set(null)
-        firebase.database().ref().child('ready').set(null)
-        firebase.database().ref().child('activeplayer').set(null)
-        firebase.database().ref().child('storyteller').set(null)
-        firebase.database().ref().child('toggle').set(false)
+        rootref.child('order').set(null)
+        rootref.child('ready').set(null)
+        rootref.child('activeplayer').set(null)
+        rootref.child('storyteller').set(null)
+        rootref.child('toggle').set(false)
         scoreRef.set(null)
       }
 
@@ -170,7 +181,7 @@
               var better = snapshot.val()
               console.log(better)
               if (better == undefined || better == null) {
-                return Promise.resolve(1)
+                return value
               }
               if (better == key) { betterscore = value }
               else { betterscore = scoreShot.val()[better] }
@@ -210,7 +221,7 @@
               var better = snapshot.val()
               console.log(better)
               if (better == undefined || better == null) {
-                return Promise.resolve(1)
+                return value
               }
               betterscore = scoreShot.val()[better] 
               console.log(betterscore)
@@ -243,24 +254,28 @@
   <div ng-app="todoApp" ng-controller="todoController">
     <div>
 
-      <p>I am the admin
-      <p>
-
-        <button class="btn btn-success m-2" ng-click="getreplies()">FETCH!</button>
+      <p>You are the sotryteller:
+        1. Read the category, let players make bets
+        2. Read the clues in order and let players answer
+        3. Mark player answers as OK/X
+      </p>
+        <!-- <button class="btn btn-success m-2" ng-click="getreplies()">FETCH!</button> -->
 
       <div class="m-4" ng-repeat="(name, answer) in replies">
         <strong>{{name}} </strong> : {{answer}}
       </div>
 
-      <button class="btn btn-danger m-2" ng-click="clear()">Clear!</button>
+      <!-- <button class="btn btn-danger m-2" ng-click="clear()">Clear!</button> -->
 
-      <button class="btn btn-warning m-2" ng-click="reset()">RESET!</button>
+      <!-- <button class="btn btn-warning m-2" ng-click="reset()">RESET!</button> -->
 
       <div>Answers:</div>
 
       <div ng-repeat="(key, value) in answers" class="m-4"> <strong>{{key}} </strong> : {{value}}
-        <button  id = '{{key}}+{{value}}ok' class="btn btn-success m-2" ng-click="markOK(key, value)">OK</button> 
-        <button  id = '{{key}}+{{value}}x' class="btn btn-danger m-2" ng-click="markWrong(key, value)">X</button>
+        <span ng-hide="phase.$value!='resolve'">
+          <button  id = '{{key}}+{{value}}ok' class="btn btn-success m-2" ng-click="markOK(key, value)">OK</button> 
+          <button  id = '{{key}}+{{value}}x' class="btn btn-danger m-2" ng-click="markWrong(key, value)">X</button>
+        </span>
       </div>
 
 
