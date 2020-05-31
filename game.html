@@ -49,6 +49,8 @@ var app =angular.module('todoApp', ["firebase"]);
 
         var numbers = ["11","12","21","22","31","32"]
 
+        var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+
         $scope.name = new URLSearchParams(window.location.search).get('name');
         
         $scope.color = new URLSearchParams(window.location.search).get('color');
@@ -92,32 +94,42 @@ var app =angular.module('todoApp', ["firebase"]);
 
         var orderRef = rootref.child('order');
 
+        var colorplayersRef = rootref.child('colorplayers');
+
         $scope.readypressed = 'btn btn-warning m-2';
 
+        //hidebool object
         $firebaseObject(toggleref).$bindTo($scope, "hidebool").then(function() {
         console.log($scope.hidebool);
         });
 
+        //showlist object
+        $firebaseObject(colorplayersRef).$bindTo($scope, "showlist").then(function() {
+        console.log($scope.showlist);
+        });
+
+        //phase object
         $firebaseObject(activePhaseRef).$bindTo($scope, "phase").then(function() {
         console.log($scope.phase);
         });
 
+        //score object
         $firebaseObject(rootref.child('score').child($scope.name)).$bindTo($scope, "score").then(function() {
         console.log($scope.score);
         });
+
+        //activeplayer object
+        $firebaseObject(activePlayerRef).$bindTo($scope, "showactiveplayer").then(function() {
+        console.log($scope.showactiveplayer);
+        });
+
+        //storyteller object
+        $firebaseObject(storyTellerRef.child('name')).$bindTo($scope, "showstoryteller").then(function() {
+        console.log($scope.showstoryteller);
+        });
+
         
     
-
-
-
-        // XXXXXX.child(XXXXXXX).once('value', function(snapshot) {
-        //        console.log(snapshot.val())
-        //     });
-
-        //reroute player to admin platform
-        //endgame, remove player button on admin platform
-        //cannot bet on nothing
-
         var initOrder = function () {
             orderRef.child($scope.name).once('value', function(snapshot) {
                 if(snapshot.exists()){
@@ -154,6 +166,7 @@ var app =angular.module('todoApp', ["firebase"]);
                             orderRef.child($scope.name).set(first);
                             orderRef.child(last).set($scope.name)
                         }
+                        colorplayersRef.child($scope.name).set($scope.color)
                         console.log("New Player Registered")
                     })
         }
@@ -346,7 +359,6 @@ var app =angular.module('todoApp', ["firebase"]);
                                 activePhaseRef.set('answer');
                                 nextcandidate = teller.val().name                                
                             }
-
                         })
                     }else{
                         nextcandidate = nextone
@@ -362,9 +374,11 @@ var app =angular.module('todoApp', ["firebase"]);
         }
 
 		$scope.submitanswer = function(aanswer){
-            if(aanswer!=undefined && aanswer!="" && aanswer!=" "){
+            if(aanswer!=undefined && aanswer!="" && aanswer!=" " && !format.test(aanswer) ){
                 $scope.tasks = "Your answer is: " +aanswer
                 answerRef.child($scope.name).set(aanswer)
+            }else{
+                alert("invalid answer")
             }
  		}
 
@@ -372,6 +386,7 @@ var app =angular.module('todoApp', ["firebase"]);
 
     
 </script>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
 </head>
 <body>
 <div ng-app="todoApp" ng-controller="todoController" ng-cloak>
@@ -381,10 +396,16 @@ var app =angular.module('todoApp', ["firebase"]);
 
 
     <div ng-hide="!hidebool.$value">
-    
 	<div class="m-2"> 
     <div>
-        <p>Name: {{name}} Color: {{color}} Score: {{score.$value}} Room: {{room}} Player Count:</p>
+        <p><b>Name:</b> {{name}} <b>Color:</b> {{color}} <b>Score:</b> {{score.$value}} <b>Room:</b> {{room}}  <b>Phase:</b> {{phase.$value}}</p> 
+        <i class="glyphicon glyphicon-cloud"></i>
+                <span>Players:</s>
+        <span class="m-1" ng-repeat="(showname, showcolor) in showlist">
+            <strong ng-style="{'color':showcolor}">{{showname}} </strong> 
+            <i ng-hide='showactiveplayer.$value!=showname' class="fas fa-user-alt"></i>
+            <i ng-hide='showstoryteller.$value!=showname' class="far fa-id-card" ></i>
+        </span>
     </div>
 	</div>
 	<div class="m-2"> 
@@ -394,7 +415,7 @@ var app =angular.module('todoApp', ["firebase"]);
     </form>
 	</div>
 
-    <button class="btn btn-success m-2" ng-click="submitanswer(answer)" ng-style="{'color':color}" ng-disabled="phase.$value != 'answer' ">ANSWER!</button>
+    <button class="btn btn-success m-2" ng-click="submitanswer(answer)" ng-style="{'background':color}" ng-disabled="phase.$value != 'answer' ">ANSWER!</button>
 	
 	<div class="alert alert-info m-2" role="alert">
         {{tasks}}
@@ -475,6 +496,7 @@ var app =angular.module('todoApp', ["firebase"]);
         </div>
     </div>
 
+    </div>
 
 
 </div>

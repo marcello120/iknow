@@ -63,9 +63,11 @@
                 gold: 1
             }
 
+            var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+
             $scope.create = function (aroom) {
-                if(aroom == "" || aroom == " " || aroom == undefined ){
-                    alert("Invalid room number");
+                if(aroom == "" || aroom == " " || aroom == undefined || format.test(aroom)){
+                    alert("Invalid room name");
                     return
                 }
 
@@ -90,13 +92,17 @@
             }
 
             $scope.join = function (aroom) {
-                if(aroom == "" || aroom == " " || aroom == undefined ){
+                if(aroom == "" || aroom == " " || aroom == undefined || format.test(aroom) ){
                     alert("Invalid room number");
                     return
                 }
 
                 firebase.database().ref().child(aroom).once("value", snapshot => {
                     if (snapshot.exists()) {
+
+                        //get color
+
+
                         window.location.href = 'register.html?room=' + aroom;
                         //go to register
                     }else{
@@ -115,7 +121,11 @@
 <body>
     <div ng-app="todoApp" ng-controller="todoController">
 
+        <!-- <p>RoomId:</p> -->
         <input type="text" class="form-control m-3" id="roominput" placeholder="RoomID" ng-model="room">
+
+        <!-- <p>Name:</p>
+        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Name" ng-model="name"> -->
 
         <button class="btn btn-success m-2 w-25" ng-click="create(room)"> Create!</button>
 

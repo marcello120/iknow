@@ -60,6 +60,8 @@
 
             $scope.colordrop = "Select a Color";
 
+            var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+
             $scope.color = ""
 
             $scope.colorlist={}
@@ -71,7 +73,7 @@
             $scope.go = function (aname, acolor, aroom) {
                 console.log(aroom)
 
-                if (aname != undefined && aname != "" && aname != " " && acolor != undefined && acolor != "") {
+                if (aname != undefined && aname != "" && aname != " " && acolor != undefined && acolor != "" && !format.test(aname)) {
                     colorRef.child(acolor).set(null).then(()=>{
                         window.location.href = 'game.html?name=' + aname + '&color=' + acolor + "&room="+ aroom;
                     })
@@ -83,10 +85,22 @@
 
  
             $scope.setColor = function (acolor) {
+                //if scope.color is not null then add it back to colorref
+                
+                colorRef.child(acolor).set(null).then(()=>{
+                    if($scope.color != "" && $scope.color!= undefined){
+                        return colorRef.child($scope.color).set(1)
+                }
+                }).then(()=>{
                 $scope.color = acolor
                 $scope.colordrop = acolor
                 console.log($scope.color)
                 console.log($scope.colordrop)
+                $scope.$apply()
+                })
+
+                //remove acolor from colorref
+              
             }
 
 
@@ -101,8 +115,7 @@
         <div class="m-2">
             <form ng-submit="addname()">
                 <p>Name:</p>
-                <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Name"
-                    ng-model="name">
+                <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Name" ng-model="name">
             </form>
         </div>
         <br>
@@ -117,7 +130,6 @@
                 </div>
             </div>
         </div>
-
         <br>
 
         
