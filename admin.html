@@ -99,6 +99,8 @@
       var negBetRef = rootref.child('bets').child('negbet');
       var storyTellerRef = rootref.child('storyteller');
       var activePhaseRef = rootref.child('activeplayer').child('phase');
+      var winnerRef = rootref.child('winner');
+
 
 
 
@@ -158,6 +160,12 @@
         reverseSpecRef.set(null)
         answerRef.set(null)
       }
+
+      winnerRef.on('value', function (snapshot) {
+                    if (snapshot.val()) {
+                      window.location.href = 'endgame.html?room='+ $scope.room + '&player=' + $scope.name + '&color=' + $scope.color
+                    }
+            });
 
 
       $scope.markOK = function (key, value) {
@@ -248,16 +256,19 @@
     });
 
   </script>
+      <title>IKnow</title>
 </head>
 
 <body>
   <div ng-app="todoApp" ng-controller="todoController">
     <div>
 
-      <p>You are the sotryteller:
-        1. Read the category, let players make bets
-        2. Read the clues in order and let players answer
-        3. Mark player answers as OK/X
+      <p><b>You are the sotryteller:</b>
+        <ol>
+          <li>Read the category, let players make bets</li>
+          <li>Read the clues in order and let players answer</li>
+          <li>Mark player answers as OK/X</li>
+        </ol>
       </p>
         <!-- <button class="btn btn-success m-2" ng-click="getreplies()">FETCH!</button> -->
 

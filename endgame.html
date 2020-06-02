@@ -53,7 +53,45 @@
 
         app.controller('todoController', function TodoCtrl($scope, $location, $firebaseArray, $firebaseObject) {
 
+
+
+            $scope.name = new URLSearchParams(window.location.search).get('name');
+
+            $scope.color = new URLSearchParams(window.location.search).get('color');
+
+            $scope.room = new URLSearchParams(window.location.search).get('room');
+
+
+            var rootref = firebase.database().ref().child($scope.room);
+
+            var scoreRef = rootref.child('score');
             
+
+            $firebaseObject(scoreRef).$bindTo($scope, "scorelist").then(function () {
+                console.log($scope.scorelist);
+
+                var maxscore = 0;
+                angular.forEach($scope.scorelist, function (value, key) {
+                    if (key != '$id' && key != '$priority') {
+                        if (value >= maxscore) {
+                            maxscore = value;
+                        }
+                    }
+                });
+
+                $scope.winner = [];
+                angular.forEach($scope.scorelist, function (value, key) {
+                    if (key != '$id' && key != '$priority') {
+                        if (value == maxscore) {
+                            $scope.winner.push(key)
+                        }
+                    }
+                });
+
+
+
+            });
+
             var basecolors = {
                 red: 1,
                 green: 1,
@@ -62,57 +100,6 @@
                 purple: 1,
                 gold: 1
             }
-
-            var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
-
-            $scope.create = function (aroom) {
-                if(aroom == "" || aroom == " " || aroom == undefined || format.test(aroom)){
-                    alert("Invalid room name");
-                    return
-                }
-
-                firebase.database().ref().child('rooms').child(aroom).once("value", snapshot => {
-                    if (snapshot.exists()) {
-                        console.log("exists!");
-                        alert("This room exists already, try joining it!");
-                    }else{
-                        firebase.database().ref().child('rooms').child(aroom).set(firebase.database.ServerValue.TIMESTAMP)
-                        .then(()=>{
-                            return firebase.database().ref().child(aroom).child('toggle').set(false)
-                        })
-                        .then(()=>{
-                            return  firebase.database().ref().child(aroom).child('colors').set(basecolors)
-                        })
-                        .then(()=>{
-                            return window.location.href = 'register.html?room=' + aroom;
-                            //transfer to register
-                        })
-                    }
-                });
-            }
-
-            $scope.join = function (aroom) {
-                if(aroom == "" || aroom == " " || aroom == undefined || format.test(aroom) ){
-                    alert("Invalid room number");
-                    return
-                }
-
-                firebase.database().ref().child(aroom).once("value", snapshot => {
-                    if (snapshot.exists()) {
-
-                        //get color
-
-
-                        window.location.href = 'register.html?room=' + aroom;
-                        //go to register
-                    }else{
-                        console.log("exists!");
-                        alert("This room  does not exists, but you can create it!");
-                    }
-                });
-            }
-
-
         });
 
     </script>
@@ -120,17 +107,30 @@
 </head>
 
 <body>
-    <div ng-app="todoApp" ng-controller="todoController">
+    <div ng-app="todoApp" ng-controller="todoController" class="ng-cloak">
+
+
+        <div class="m-2">
+            <span>Scores:</span>
+            <span class="m-1" ng-repeat="(playername, playerscore) in scorelist">
+                <strong>{{playername}} : </strong>
+                <span>{{playerscore}}</span>
+            </span>
+            <br>
+            <br>
+            <h3>Congratulations! <span ng-repeat="winning in winner"> {{winning}}, </span> has won the game.</h3>
+        </div>
+
 
         <!-- <p>RoomId:</p> -->
-        <input type="text" class="form-control m-3" id="roominput" placeholder="RoomID" ng-model="room">
 
         <!-- <p>Name:</p>
         <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Name" ng-model="name"> -->
 
-        <button class="btn btn-success m-2 w-25" ng-click="create(room)"> Create!</button>
 
-        <button class="btn btn-success m-2 w-25"  ng-click="join(room)">Join!</button>
+        <img src="https://media.giphy.com/media/WNJATm9pwnjpjI1i0g/giphy.gif" alt="Confetti Sticker" style="position: absolute; height: 100vh; width: 100vw; left: 0px; top: 0px;">
+
+
 
     </div>
 </body>

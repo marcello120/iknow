@@ -107,6 +107,7 @@
         });
 
     </script>
+        <title>IKnow</title>
 </head>
 
 <body>
@@ -114,6 +115,7 @@
 
         <div class="m-2">
             <form ng-submit="addname()">
+                <p>Room: {{room}}</p>
                 <p>Name:</p>
                 <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Name" ng-model="name">
             </form>
@@ -129,11 +131,12 @@
                     <button ng-repeat="(key, value) in colorlist" class="dropdown-item" ng-style="{'color':key}" ng-click="setColor(key)">{{key}}</button>
                 </div>
             </div>
+            <br>
+            <button class="btn btn-success m-2 w-100"  ng-click="go(name,color,room)">START!</button>
+
         </div>
-        <br>
 
         
-        <button class="btn btn-success m-2 w-100"  ng-click="go(name,color,room)">START!</button>
 
 
         <!--just set listeners to gamestate and update colors/button enabling based on that-->
