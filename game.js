@@ -212,7 +212,8 @@ app.controller('todoController', ['$scope', '$location', '$firebaseArray', '$fir
             console.log(tellerobj.name)
             if (tellerobj.name == $scope.name) {
                 console.log('you are storyteller')
-                window.location.href = 'admin.html?name=' + $scope.name + '&color=' + $scope.color + '&room=' + $scope.room
+                var random = Math.floor((Math.random() * 4) + 2);
+                window.location.href = 'admin.html?name=' + $scope.name + '&color=' + $scope.color + '&room=' + $scope.room + '&random=' + random
 
             }
         })

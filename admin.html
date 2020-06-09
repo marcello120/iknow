@@ -33,25 +33,25 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="HandheldFriendly" content="true">
-  
+
   <script src="admin.js"></script>
 
 
-      <title>IKnow</title>
+  <title>IKnow</title>
 </head>
 
 <body>
   <div ng-app="todoApp" ng-controller="todoController">
-    <div>
+    <div class="m-2"> 
 
       <p><b>You are the sotryteller:</b>
-        <ol>
-          <li>Read the category, let players make bets</li>
-          <li>Read the clues in order and let players answer</li>
-          <li>Mark player answers as OK/X</li>
-        </ol>
+      <ol>
+        <li>Read the category, let players make bets</li>
+        <li>Read the clues in order and let players answer</li>
+        <li>Mark player answers as OK/X</li>
+      </ol>
       </p>
-        <!-- <button class="btn btn-success m-2" ng-click="getreplies()">FETCH!</button> -->
+      <!-- <button class="btn btn-success m-2" ng-click="getreplies()">FETCH!</button> -->
 
       <div class="m-4" ng-repeat="(name, answer) in replies">
         <strong>{{name}} </strong> : {{answer}}
@@ -65,10 +65,25 @@
 
       <div ng-repeat="(key, value) in answers" class="m-4"> <strong>{{key}} </strong> : {{value}}
         <span ng-hide="phase.$value!='resolve'">
-          <button  id = '{{key}}+{{value}}ok' class="btn btn-success m-2" ng-click="markOK(key, value)">OK</button> 
-          <button  id = '{{key}}+{{value}}x' class="btn btn-danger m-2" ng-click="markWrong(key, value)">X</button>
+          <button id='{{key}}+{{value}}ok' class="btn btn-success m-2" ng-click="markOK(key, value)">OK</button>
+          <button id='{{key}}+{{value}}x' class="btn btn-danger m-2" ng-click="markWrong(key, value)">X</button>
         </span>
       </div>
+
+      
+      <br>
+      
+
+
+      <button class="btn btn-primary m-2" type="button" data-toggle="collapse" data-target="#collapseExample">
+        Question:
+      </button>
+      <div class="collapse" id="collapseExample">
+        <div class="card card-body">
+          <h5>{{question}}</h5>
+        </div>
+      </div>
+
 
 
 

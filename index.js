@@ -27,6 +27,7 @@
                 gold: 1
             }
 
+
             var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
 
             $scope.create = function (aroom) {

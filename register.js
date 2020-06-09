@@ -18,6 +18,8 @@
 
             $scope.room = new URLSearchParams(window.location.search).get('room');
 
+            $scope.qrsource="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://marcello120.github.io/iknow/register.html?room="+ $scope.room
+
             var rootref = firebase.database().ref().child($scope.room);
 
             var colorRef = rootref.child('colors');
