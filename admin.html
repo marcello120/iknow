@@ -36,13 +36,29 @@
 
   <script src="admin.js"></script>
 
-
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+  integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
   <title>IKnow</title>
 </head>
 
 <body>
   <div ng-app="todoApp" ng-controller="todoController">
     <div class="m-2"> 
+
+      <div class="m-2">
+        <p><b>Name:</b> {{name}} <b>Color:</b> {{color}} <b>Score:</b> {{score.$value}} <b>Room:</b> {{room}}</p>
+      </div>
+
+      <div class="m-2">
+        <div>
+            <span>Players:</span>
+            <span class="m-1" ng-repeat="(showname, showcolor) in showlist">
+                <strong ng-style="{'color':showcolor}">{{showname}} </strong>
+                <i ng-hide='showactiveplayer.$value!=showname' class="fas fa-user-alt"></i>
+                <i ng-hide='showstoryteller.$value!=showname' class="far fa-id-card"></i>
+            </span>
+        </div>
+    </div>      
 
       <p><b>You are the sotryteller:</b>
       <ol>
@@ -65,8 +81,8 @@
 
       <div ng-repeat="(key, value) in answers" class="m-4"> <strong>{{key}} </strong> : {{value}}
         <span ng-hide="phase.$value!='resolve'">
-          <button id='{{key}}+{{value}}ok' class="btn btn-success m-2" ng-click="markOK(key, value)">OK</button>
-          <button id='{{key}}+{{value}}x' class="btn btn-danger m-2" ng-click="markWrong(key, value)">X</button>
+          <button id='{{key}}+{{value}}ok' ng-disabled="disablemarking" class="btn btn-success m-2" ng-click="markOK(key, value)">OK</button>
+          <button id='{{key}}+{{value}}x' ng-disabled="disablemarking" class="btn btn-danger m-2" ng-click="markWrong(key, value)">X</button>
         </span>
       </div>
 

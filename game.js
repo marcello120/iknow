@@ -21,7 +21,7 @@ app.controller('todoController', ['$scope', '$location', '$firebaseArray', '$fir
 
     var numbers = ["11", "12", "21", "22", "31", "32"]
 
-    var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+    var format = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
 
     $scope.name = new URLSearchParams(window.location.search).get('name');
 

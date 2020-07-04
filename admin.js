@@ -66,9 +66,16 @@ app.controller('todoController', function TodoCtrl($scope, $location, $firebaseA
   var storyTellerRef = rootref.child('storyteller');
   var activePhaseRef = rootref.child('activeplayer').child('phase');
   var winnerRef = rootref.child('winner');
+  var colorplayersRef = rootref.child('colorplayers');
+  var activePlayerRef = rootref.child('activeplayer').child('player');
+
+
 
 
   $scope.question = {}
+
+  $scope.disablemarking = false;
+
 
   $http.get('https://us-central1-quiz-2414b.cloudfunctions.net/main', {
     params: { random: $scope.random }
@@ -80,6 +87,26 @@ app.controller('todoController', function TodoCtrl($scope, $location, $firebaseA
     });
 
 
+  //showlist object
+  $firebaseObject(colorplayersRef).$bindTo($scope, "showlist").then(function () {
+    console.log($scope.showlist);
+  });
+
+  //activeplayer object
+  $firebaseObject(activePlayerRef).$bindTo($scope, "showactiveplayer").then(function () {
+    console.log($scope.showactiveplayer);
+  });
+
+  //storyteller object
+  $firebaseObject(storyTellerRef.child('name')).$bindTo($scope, "showstoryteller").then(function () {
+    console.log($scope.showstoryteller);
+  });
+
+
+  //score object
+  $firebaseObject(rootref.child('score').child($scope.name)).$bindTo($scope, "score").then(function () {
+    console.log($scope.score);
+  });
 
 
   var storytellerWatch = $firebaseObject(storyTellerRef).$watch(function () {
@@ -145,6 +172,8 @@ app.controller('todoController', function TodoCtrl($scope, $location, $firebaseA
 
 
   $scope.markOK = function (key, value) {
+    disablemarking = true;
+    console.log("marking disabled")
 
     document.getElementById(key + "+" + value + "ok").disabled = true;
     document.getElementById(key + "+" + value + "x").disabled = true;
@@ -187,10 +216,17 @@ app.controller('todoController', function TodoCtrl($scope, $location, $firebaseA
       })
     }).then((value) => {
       answerRef.child(key).set(null)
+      console.log("marking enabled")
+
+      disablemarking = false;
     })
   }
 
   $scope.markWrong = function (key, value) {
+
+    disablemarking = true;
+    console.log("marking disabled")
+
 
     document.getElementById(key + "+" + value + "ok").disabled = true;
     document.getElementById(key + "+" + value + "x").disabled = true;
@@ -209,7 +245,7 @@ app.controller('todoController', function TodoCtrl($scope, $location, $firebaseA
         }
         betterscore = scoreShot.val()[better]
         console.log(betterscore)
-        return scoreRef.child(better).set(betterscore + 1).then((v) => { return value })
+        return scoreRef.child(better).set(betterscore - 1).then((v) => { return value })
       })
         .then(value2 => {
           return negBetRef.child(key).once('value').then(function (snapshot) {
@@ -219,11 +255,13 @@ app.controller('todoController', function TodoCtrl($scope, $location, $firebaseA
               return Promise.resolve(1)
             }
             betterscore = scoreShot.val()[better]
-            return scoreRef.child(better).set(betterscore - 1)
+            return scoreRef.child(better).set(betterscore + 1)
           })
         })
     }).then((value) => {
       answerRef.child(key).set(null)
+      console.log("marking enabled")
+      disablemarking = false;
     })
 
   }
